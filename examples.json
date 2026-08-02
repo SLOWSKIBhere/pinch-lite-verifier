@@ -1,0 +1,20 @@
+[
+  {
+    "answer": "Water freezes at 0 degrees Celsius at standard pressure.",
+    "confidence": 0.8,
+    "evidence": [
+      "A standard chemistry reference",
+      "A controlled temperature measurement"
+    ]
+  },
+  {
+    "answer": "",
+    "confidence": 0.95,
+    "evidence": ["Only one source"]
+  },
+  {
+    "answer": "This candidate has malformed evidence.",
+    "confidence": -0.1,
+    "evidence": "not a list"
+  }
+]
