@@ -1,0 +1,76 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "PINCH-LAB-20260810-PREFLIGHT-01",
+  "baseline_version": "BASELINE_0",
+  "policy": {
+    "statuses": [
+      "source_confirmed",
+      "experiment_supported",
+      "partially_supported",
+      "contradicted",
+      "unverifiable",
+      "verifier_error"
+    ],
+    "rule": "Source-confirmed behavior is not automatically an experiment outcome. Promote or revise claims only with evidence references."
+  },
+  "claims": [
+    {
+      "claim_id": "BL-001",
+      "claim": "The Studio pipeline is a deterministic UI simulation and does not invoke configured models or tools.",
+      "status": "source_confirmed",
+      "evidence_refs": [
+        "PinchWorkflowStudio.jsx:591-713",
+        "PinchWorkflowStudio.jsx:1732-1740"
+      ],
+      "experiment_status": "not_run"
+    },
+    {
+      "claim_id": "BL-002",
+      "claim": "Studio Save is session-memory only and does not provide durable interruption recovery.",
+      "status": "source_confirmed",
+      "evidence_refs": [
+        "PinchWorkflowStudio.jsx:1773",
+        "PinchWorkflowStudio.jsx:1882-1885"
+      ],
+      "experiment_status": "not_run"
+    },
+    {
+      "claim_id": "BL-003",
+      "claim": "Only REQUIRE_APPROVAL pauses auto-run; BLOCK, REVISE, and failed stage results do not halt the simulation.",
+      "status": "source_confirmed",
+      "evidence_refs": [
+        "PinchWorkflowStudio.jsx:663-713",
+        "PinchWorkflowStudio.jsx:2020-2026"
+      ],
+      "experiment_status": "not_run"
+    },
+    {
+      "claim_id": "BL-004",
+      "claim": "Generic Studio evidence strength is derived from objective word count rather than evidence content.",
+      "status": "source_confirmed",
+      "evidence_refs": [
+        "PinchWorkflowStudio.jsx:456-488"
+      ],
+      "experiment_status": "not_run"
+    },
+    {
+      "claim_id": "BL-005",
+      "claim": "Python case verification is a deterministic structural gate followed by a closed-world exact-normalized accuracy gate.",
+      "status": "source_confirmed",
+      "evidence_refs": [
+        "verifier.py:21-176",
+        "README.md:14-26"
+      ],
+      "experiment_status": "not_run"
+    },
+    {
+      "claim_id": "BL-006",
+      "claim": "The Python dataset runner has no per-case checkpoint or recovery and can stop after partial console output on a later validation error.",
+      "status": "source_confirmed",
+      "evidence_refs": [
+        "verifier.py:192-243"
+      ],
+      "experiment_status": "not_run"
+    }
+  ]
+}

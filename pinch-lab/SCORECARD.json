@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "PINCH-LAB-20260810-PREFLIGHT-01",
+  "baseline_version": "BASELINE_0",
+  "status": "baseline_formula_captured_experiment_not_run",
+  "studio_formula": {
+    "metrics": [
+      "architectureCompleteness",
+      "claimSupportCoverage",
+      "verifierAgreement",
+      "permissionCompliance",
+      "executionAlignment",
+      "auditCoverage"
+    ],
+    "overall_weights": {
+      "architectureCompleteness": 0.2,
+      "claimSupportCoverage": 0.2,
+      "verifierAgreement": 0.15,
+      "permissionCompliance": 0.15,
+      "executionAlignment": 0.15,
+      "auditCoverage": 0.15
+    },
+    "critical_readiness_cap": 35,
+    "source_ref": "PinchWorkflowStudio.jsx:718-779"
+  },
+  "source_default_snapshot": {
+    "derivation": "Static calculation from untouched React initial state; not a UI experiment result.",
+    "finding_counts": {
+      "critical": 1,
+      "warning": 4
+    },
+    "metrics": {
+      "architectureCompleteness": 55,
+      "claimSupportCoverage": 0,
+      "verifierAgreement": 0,
+      "permissionCompliance": 100,
+      "executionAlignment": 0,
+      "auditCoverage": 0
+    },
+    "overallReadiness": 11,
+    "strongestLabel": "Permission Compliance",
+    "largestRiskLabel": "Claim Support Coverage",
+    "finalStatus": "Blocked",
+    "nextStep": "Resolve the critical finding or blocked claim before re-running."
+  },
+  "lab_evaluation_scorecard": {
+    "status": "not_run",
+    "dimensions": {
+      "procedural_integrity": null,
+      "claim_epistemics": null,
+      "permission_enforcement": null,
+      "execution_fidelity": null,
+      "audit_fidelity": null,
+      "recovery_resilience": null,
+      "regression_safety": null
+    },
+    "overall": null,
+    "scoring_policy": "Freeze dimension rubrics before experiment execution; do not back-fit thresholds to observed results."
+  }
+}

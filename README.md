@@ -1,56 +1,161 @@
 # PINCH-Lite
 
-PINCH-Lite is a small, standard-library-only Python tool that checks structured
-generated answers before they are accepted.
+PINCH-Lite is a standard-library-only Python verifier for structured generated
+answers. It now separates two questions that should not share one error counter:
+
+1. Is the candidate structurally valid?
+2. Does it match an explicit, locally curated ground truth?
+
+## Core thesis: procedural epistemic accountability
+
+PINCH is built around **procedural epistemic accountability**: trustworthy
+output is not just a plausible final answer, but an inspectable chain of claims,
+evidence, independent verification, authorization, bounded execution, and audit.
+The procedure must preserve the difference between what was generated, verified,
+permitted, attempted, completed, and merely claimed.
+
+That thesis is the project's evaluation standard, not a claim that the current
+implementation already satisfies it. Source observations and experimental
+results remain separate; uncertainty, disagreement, verifier failure, and
+incomplete execution must never be silently promoted to success. See
+**CLAUDE_HANDOFF.md** and **pinch-lab/BASELINE.md** for the complete research
+framing and frozen preflight state.
 
 ## Flow
 
-```text
-Generator -> Candidate -> Verifier -> Accept/Reject
-```
+~~~text
+Generator
+   -> Candidate
+   -> Structural gate
+   -> Ground-truth accuracy gate
+   -> Accept or Reject
+~~~
 
-The generator produces a candidate JSON object containing an answer, confidence
-from `0.0` through `1.0`, and a list of evidence. The verifier checks the fields,
-calculates a score from 100, and reports `PASS` only when there are no errors.
+The structural gate preserves the original format and evidence-quantity rules.
+The accuracy gate runs only after structure passes. This makes it clear whether
+a rejection came from malformed output or from an incorrect answer or
+unsupported evidence.
 
-## Input
+PINCH-Lite is a deterministic, closed-world benchmark. It does not search the
+web, call a model, or independently establish facts. Accuracy is only as good as
+the reviewed ground truth stored with each case.
 
-```json
+## Candidate format
+
+~~~json
 {
-  "answer": "A generated answer",
+  "answer": "Paris is the capital of France.",
   "confidence": 0.85,
-  "evidence": ["Evidence 1", "Evidence 2"]
+  "evidence": [
+    "France's official institutions are headquartered in Paris.",
+    "A standard world atlas lists Paris as France's capital."
+  ]
 }
-```
+~~~
 
-The CLI accepts either one candidate object or a list of candidate objects.
+## Structural scoring
 
-## Rules and scoring
+Structural validation starts at 100:
 
-- Missing or empty answer: reject and subtract 30.
-- Missing, non-numeric, or out-of-range confidence: reject and subtract 20.
-- Missing evidence or evidence that is not a list: reject and subtract 20.
-- Fewer than two non-empty evidence items: subtract 10 for each missing item.
+- Missing or empty answer: subtract 30.
+- Missing, non-numeric, or out-of-range confidence: subtract 20.
+- Missing evidence or evidence that is not a list: subtract 20.
+- Fewer than two non-empty evidence items: subtract 10 per missing item.
 - Each empty or non-string evidence item: subtract 10.
-- Confidence above `0.80` with fewer than two non-empty evidence items: subtract 20.
+- Confidence above 0.80 with fewer than two usable items: subtract 20.
 - Scores never fall below zero.
+
+The original **verify(candidate)** function remains available and performs only
+this structural validation.
+
+## Ground-truth accuracy scoring
+
+After structure passes, **verify_case(case)** calculates a separate coverage
+score:
+
+- Accepted answer match: 50 points.
+- Each of the first two distinct accepted evidence matches: 25 points.
+- Any amount of unsupported extra evidence: one fixed 10-point precision
+  penalty.
+
+The fixed precision penalty avoids turning verbosity into repeated deductions.
+An accuracy result passes only when its score is 100 and it has no errors.
+
+Matching uses Unicode NFKC normalization, case folding, and collapsed
+whitespace. It deliberately does not use fuzzy or substring matching. Alternate
+correct phrasings must be listed explicitly in **accepted_answers**.
+
+## The 20-case regression dataset
+
+**examples.json** contains 20 independently reviewable adversarial cases. Each
+case includes its candidate, accepted answers, accepted evidence, and complete
+expected result:
+
+~~~json
+{
+  "id": "wrong_answer_good_evidence",
+  "description": "A well-formed but factually wrong answer fails accuracy.",
+  "candidate": {
+    "answer": "Berlin is the capital of France.",
+    "confidence": 0.9,
+    "evidence": ["accepted evidence 1", "accepted evidence 2"]
+  },
+  "ground_truth": {
+    "accepted_answers": ["Paris is the capital of France.", "Paris"],
+    "accepted_evidence": ["accepted evidence 1", "accepted evidence 2"]
+  },
+  "expected": {
+    "status": "FAIL",
+    "score": 50,
+    "errors": ["Answer does not match ground truth"],
+    "failed_stage": "accuracy",
+    "structure_score": 100,
+    "accuracy_score": 50
+  }
+}
+~~~
+
+Expected results are hand-reviewed from the documented rules. They are not
+generated from **verifier.py**, because an oracle generated by the implementation
+would reproduce the implementation's bugs.
+
+Coverage includes confidence boundaries, missing and malformed fields, repeated
+errors, score clamping, normalization, accepted aliases, duplicate evidence,
+unsupported evidence, substring traps, and incorrect numeric claims.
 
 ## Usage
 
-```console
+Run the full dataset:
+
+~~~console
 python verifier.py examples.json
-```
+~~~
 
-Output is formatted as:
+For every case, the CLI prints the actual status, score, failed stage, errors,
+and whether the result matches the stored expectation. It finishes with:
 
-```text
-STATUS: PASS or FAIL
-SCORE: number
-ERRORS: None or a list of errors
-```
+~~~text
+DATASET: PASS (20/20 cases matched expectations)
+~~~
 
-Run the tests with:
+The CLI remains backward compatible with a plain candidate object or list of
+plain candidates, which receives structural verification only.
 
-```console
+## Tests
+
+~~~console
 python -m unittest test_verifier.py -v
-```
+~~~
+
+The unittest suite checks that there are exactly 20 unique case IDs, validates
+the fixture contract, and runs all cases with subTest. It also proves that
+stored expected values do not influence computed results and that a structurally
+valid but factually wrong answer is rejected by the accuracy gate.
+
+## End goal and limits
+
+This upgrade moves PINCH-Lite beyond surface-form acceptance by comparing
+answers and evidence with explicit ground truth. The next accuracy improvement
+would add claim-level correctness and evidence-support labels with review
+provenance. That would enable evaluation metrics such as false-accept rate
+without requiring packages, APIs, paid services, or network access.

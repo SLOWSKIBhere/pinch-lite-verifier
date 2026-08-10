@@ -1,20 +1,611 @@
 [
   {
-    "answer": "Water freezes at 0 degrees Celsius at standard pressure.",
-    "confidence": 0.8,
-    "evidence": [
-      "A standard chemistry reference",
-      "A controlled temperature measurement"
-    ]
+    "id": "valid_baseline",
+    "description": "A correct answer at the 0.80 confidence boundary with two supported evidence items.",
+    "candidate": {
+      "answer": "Paris is the capital of France.",
+      "confidence": 0.8,
+      "evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "A standard world atlas lists Paris as France's capital."
+      ]
+    },
+    "ground_truth": {
+      "accepted_answers": [
+        "Paris is the capital of France.",
+        "Paris"
+      ],
+      "accepted_evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "A standard world atlas lists Paris as France's capital.",
+        "Paris is the seat of the French national government."
+      ]
+    },
+    "expected": {
+      "status": "PASS",
+      "score": 100,
+      "errors": [],
+      "failed_stage": "none",
+      "structure_score": 100,
+      "accuracy_score": 100
+    }
   },
   {
-    "answer": "",
-    "confidence": 0.95,
-    "evidence": ["Only one source"]
+    "id": "normalized_match",
+    "description": "Case and repeated whitespace do not defeat a correct exact answer.",
+    "candidate": {
+      "answer": "  WATER   FREEZES AT 0 DEGREES CELSIUS AT STANDARD PRESSURE. ",
+      "confidence": 0.95,
+      "evidence": [
+        "A STANDARD CHEMISTRY REFERENCE STATES THE FREEZING POINT IS 0 °C AT STANDARD PRESSURE.",
+        "A controlled   measurement observes the phase change at 0 °C."
+      ]
+    },
+    "ground_truth": {
+      "accepted_answers": [
+        "Water freezes at 0 degrees Celsius at standard pressure.",
+        "Water freezes at 0 °C at standard pressure."
+      ],
+      "accepted_evidence": [
+        "A standard chemistry reference states the freezing point is 0 °C at standard pressure.",
+        "A controlled measurement observes the phase change at 0 °C."
+      ]
+    },
+    "expected": {
+      "status": "PASS",
+      "score": 100,
+      "errors": [],
+      "failed_stage": "none",
+      "structure_score": 100,
+      "accuracy_score": 100
+    }
   },
   {
-    "answer": "This candidate has malformed evidence.",
-    "confidence": -0.1,
-    "evidence": "not a list"
+    "id": "accepted_alias",
+    "description": "An explicitly listed answer alias is accepted.",
+    "candidate": {
+      "answer": "The Pacific Ocean",
+      "confidence": 1.0,
+      "evidence": [
+        "The Pacific Ocean is larger than every other ocean.",
+        "Global ocean-area measurements rank the Pacific first."
+      ]
+    },
+    "ground_truth": {
+      "accepted_answers": [
+        "Pacific Ocean",
+        "The Pacific Ocean"
+      ],
+      "accepted_evidence": [
+        "The Pacific Ocean is larger than every other ocean.",
+        "Global ocean-area measurements rank the Pacific first."
+      ]
+    },
+    "expected": {
+      "status": "PASS",
+      "score": 100,
+      "errors": [],
+      "failed_stage": "none",
+      "structure_score": 100,
+      "accuracy_score": 100
+    }
+  },
+  {
+    "id": "wrong_answer_good_evidence",
+    "description": "A well-formed but factually wrong answer fails the accuracy gate.",
+    "candidate": {
+      "answer": "Berlin is the capital of France.",
+      "confidence": 0.9,
+      "evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "A standard world atlas lists Paris as France's capital."
+      ]
+    },
+    "ground_truth": {
+      "accepted_answers": [
+        "Paris is the capital of France.",
+        "Paris"
+      ],
+      "accepted_evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "A standard world atlas lists Paris as France's capital."
+      ]
+    },
+    "expected": {
+      "status": "FAIL",
+      "score": 50,
+      "errors": [
+        "Answer does not match ground truth"
+      ],
+      "failed_stage": "accuracy",
+      "structure_score": 100,
+      "accuracy_score": 50
+    }
+  },
+  {
+    "id": "partially_supported_evidence",
+    "description": "One supported and one unsupported evidence item is insufficient.",
+    "candidate": {
+      "answer": "Paris is the capital of France.",
+      "confidence": 0.9,
+      "evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "A travel blog makes an unsupported assertion."
+      ]
+    },
+    "ground_truth": {
+      "accepted_answers": [
+        "Paris is the capital of France.",
+        "Paris"
+      ],
+      "accepted_evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "A standard world atlas lists Paris as France's capital."
+      ]
+    },
+    "expected": {
+      "status": "FAIL",
+      "score": 65,
+      "errors": [
+        "Fewer than two distinct evidence items match ground truth",
+        "Candidate evidence includes unsupported item(s)"
+      ],
+      "failed_stage": "accuracy",
+      "structure_score": 100,
+      "accuracy_score": 65
+    }
+  },
+  {
+    "id": "duplicate_evidence",
+    "description": "Repeating one valid source does not count as two independent matches.",
+    "candidate": {
+      "answer": "Paris is the capital of France.",
+      "confidence": 0.9,
+      "evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "France's official institutions are headquartered in Paris."
+      ]
+    },
+    "ground_truth": {
+      "accepted_answers": [
+        "Paris is the capital of France.",
+        "Paris"
+      ],
+      "accepted_evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "A standard world atlas lists Paris as France's capital."
+      ]
+    },
+    "expected": {
+      "status": "FAIL",
+      "score": 75,
+      "errors": [
+        "Fewer than two distinct evidence items match ground truth"
+      ],
+      "failed_stage": "accuracy",
+      "structure_score": 100,
+      "accuracy_score": 75
+    }
+  },
+  {
+    "id": "substring_trap",
+    "description": "A longer answer containing the expected text is not an exact truth match.",
+    "candidate": {
+      "answer": "Paris, Texas",
+      "confidence": 0.7,
+      "evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "A standard world atlas lists Paris as France's capital."
+      ]
+    },
+    "ground_truth": {
+      "accepted_answers": [
+        "Paris",
+        "Paris is the capital of France."
+      ],
+      "accepted_evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "A standard world atlas lists Paris as France's capital."
+      ]
+    },
+    "expected": {
+      "status": "FAIL",
+      "score": 50,
+      "errors": [
+        "Answer does not match ground truth"
+      ],
+      "failed_stage": "accuracy",
+      "structure_score": 100,
+      "accuracy_score": 50
+    }
+  },
+  {
+    "id": "numeric_fact_trap",
+    "description": "A nearby but incorrect numeric claim fails exact ground truth.",
+    "candidate": {
+      "answer": "Water freezes at 100 degrees Celsius at standard pressure.",
+      "confidence": 0.9,
+      "evidence": [
+        "A standard chemistry reference states the freezing point is 0 °C at standard pressure.",
+        "A controlled measurement observes the phase change at 0 °C."
+      ]
+    },
+    "ground_truth": {
+      "accepted_answers": [
+        "Water freezes at 0 degrees Celsius at standard pressure.",
+        "Water freezes at 0 °C at standard pressure."
+      ],
+      "accepted_evidence": [
+        "A standard chemistry reference states the freezing point is 0 °C at standard pressure.",
+        "A controlled measurement observes the phase change at 0 °C."
+      ]
+    },
+    "expected": {
+      "status": "FAIL",
+      "score": 50,
+      "errors": [
+        "Answer does not match ground truth"
+      ],
+      "failed_stage": "accuracy",
+      "structure_score": 100,
+      "accuracy_score": 50
+    }
+  },
+  {
+    "id": "unsupported_extra_evidence",
+    "description": "Unsupported extra evidence receives one fixed precision penalty.",
+    "candidate": {
+      "answer": "Paris is the capital of France.",
+      "confidence": 0.99,
+      "evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "A standard world atlas lists Paris as France's capital.",
+        "An unrelated forum comment."
+      ]
+    },
+    "ground_truth": {
+      "accepted_answers": [
+        "Paris is the capital of France.",
+        "Paris"
+      ],
+      "accepted_evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "A standard world atlas lists Paris as France's capital."
+      ]
+    },
+    "expected": {
+      "status": "FAIL",
+      "score": 90,
+      "errors": [
+        "Candidate evidence includes unsupported item(s)"
+      ],
+      "failed_stage": "accuracy",
+      "structure_score": 100,
+      "accuracy_score": 90
+    }
+  },
+  {
+    "id": "missing_answer",
+    "description": "A missing answer fails before accuracy is evaluated.",
+    "candidate": {
+      "confidence": 0.5,
+      "evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "A standard world atlas lists Paris as France's capital."
+      ]
+    },
+    "ground_truth": {
+      "accepted_answers": ["Paris"],
+      "accepted_evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "A standard world atlas lists Paris as France's capital."
+      ]
+    },
+    "expected": {
+      "status": "FAIL",
+      "score": 70,
+      "errors": [
+        "Missing or empty answer"
+      ],
+      "failed_stage": "structure",
+      "structure_score": 70,
+      "accuracy_score": null
+    }
+  },
+  {
+    "id": "boolean_confidence",
+    "description": "A JSON Boolean is not accepted as numeric confidence.",
+    "candidate": {
+      "answer": "Paris",
+      "confidence": true,
+      "evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "A standard world atlas lists Paris as France's capital."
+      ]
+    },
+    "ground_truth": {
+      "accepted_answers": ["Paris"],
+      "accepted_evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "A standard world atlas lists Paris as France's capital."
+      ]
+    },
+    "expected": {
+      "status": "FAIL",
+      "score": 80,
+      "errors": [
+        "Confidence must be between 0.0 and 1.0"
+      ],
+      "failed_stage": "structure",
+      "structure_score": 80,
+      "accuracy_score": null
+    }
+  },
+  {
+    "id": "confidence_above_one",
+    "description": "Confidence above the inclusive maximum is invalid.",
+    "candidate": {
+      "answer": "Paris",
+      "confidence": 1.01,
+      "evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "A standard world atlas lists Paris as France's capital."
+      ]
+    },
+    "ground_truth": {
+      "accepted_answers": ["Paris"],
+      "accepted_evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "A standard world atlas lists Paris as France's capital."
+      ]
+    },
+    "expected": {
+      "status": "FAIL",
+      "score": 80,
+      "errors": [
+        "Confidence must be between 0.0 and 1.0"
+      ],
+      "failed_stage": "structure",
+      "structure_score": 80,
+      "accuracy_score": null
+    }
+  },
+  {
+    "id": "missing_evidence",
+    "description": "Missing evidence incurs the list and two required-item penalties.",
+    "candidate": {
+      "answer": "Paris",
+      "confidence": 0.5
+    },
+    "ground_truth": {
+      "accepted_answers": ["Paris"],
+      "accepted_evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "A standard world atlas lists Paris as France's capital."
+      ]
+    },
+    "expected": {
+      "status": "FAIL",
+      "score": 60,
+      "errors": [
+        "Evidence must be a list",
+        "Missing required evidence item",
+        "Missing required evidence item"
+      ],
+      "failed_stage": "structure",
+      "structure_score": 60,
+      "accuracy_score": null
+    }
+  },
+  {
+    "id": "wrong_type_evidence_high_confidence",
+    "description": "Wrong-type evidence plus high confidence triggers all independent rules.",
+    "candidate": {
+      "answer": "Paris",
+      "confidence": 0.95,
+      "evidence": "not a list"
+    },
+    "ground_truth": {
+      "accepted_answers": ["Paris"],
+      "accepted_evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "A standard world atlas lists Paris as France's capital."
+      ]
+    },
+    "expected": {
+      "status": "FAIL",
+      "score": 40,
+      "errors": [
+        "Evidence must be a list",
+        "Missing required evidence item",
+        "Missing required evidence item",
+        "High confidence is unsupported by sufficient evidence"
+      ],
+      "failed_stage": "structure",
+      "structure_score": 40,
+      "accuracy_score": null
+    }
+  },
+  {
+    "id": "empty_evidence_list",
+    "description": "An empty list is the right type but lacks both required items.",
+    "candidate": {
+      "answer": "Paris",
+      "confidence": 0.5,
+      "evidence": []
+    },
+    "ground_truth": {
+      "accepted_answers": ["Paris"],
+      "accepted_evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "A standard world atlas lists Paris as France's capital."
+      ]
+    },
+    "expected": {
+      "status": "FAIL",
+      "score": 80,
+      "errors": [
+        "Missing required evidence item",
+        "Missing required evidence item"
+      ],
+      "failed_stage": "structure",
+      "structure_score": 80,
+      "accuracy_score": null
+    }
+  },
+  {
+    "id": "one_evidence_at_threshold",
+    "description": "Exactly 0.80 is not high confidence, so only one item is missing.",
+    "candidate": {
+      "answer": "Paris",
+      "confidence": 0.8,
+      "evidence": [
+        "France's official institutions are headquartered in Paris."
+      ]
+    },
+    "ground_truth": {
+      "accepted_answers": ["Paris"],
+      "accepted_evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "A standard world atlas lists Paris as France's capital."
+      ]
+    },
+    "expected": {
+      "status": "FAIL",
+      "score": 90,
+      "errors": [
+        "Missing required evidence item"
+      ],
+      "failed_stage": "structure",
+      "structure_score": 90,
+      "accuracy_score": null
+    }
+  },
+  {
+    "id": "one_evidence_high_confidence",
+    "description": "Above 0.80, one evidence item also triggers unsupported confidence.",
+    "candidate": {
+      "answer": "Paris",
+      "confidence": 0.81,
+      "evidence": [
+        "France's official institutions are headquartered in Paris."
+      ]
+    },
+    "ground_truth": {
+      "accepted_answers": ["Paris"],
+      "accepted_evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "A standard world atlas lists Paris as France's capital."
+      ]
+    },
+    "expected": {
+      "status": "FAIL",
+      "score": 70,
+      "errors": [
+        "Missing required evidence item",
+        "High confidence is unsupported by sufficient evidence"
+      ],
+      "failed_stage": "structure",
+      "structure_score": 70,
+      "accuracy_score": null
+    }
+  },
+  {
+    "id": "empty_item_at_threshold",
+    "description": "An empty item is penalized as empty and as one missing usable item.",
+    "candidate": {
+      "answer": "Paris",
+      "confidence": 0.8,
+      "evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "   "
+      ]
+    },
+    "ground_truth": {
+      "accepted_answers": ["Paris"],
+      "accepted_evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "A standard world atlas lists Paris as France's capital."
+      ]
+    },
+    "expected": {
+      "status": "FAIL",
+      "score": 80,
+      "errors": [
+        "Evidence item must be non-empty",
+        "Missing required evidence item"
+      ],
+      "failed_stage": "structure",
+      "structure_score": 80,
+      "accuracy_score": null
+    }
+  },
+  {
+    "id": "invalid_extra_evidence",
+    "description": "An invalid extra item fails structure even after two usable items.",
+    "candidate": {
+      "answer": "Paris",
+      "confidence": 0.95,
+      "evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "A standard world atlas lists Paris as France's capital.",
+        null
+      ]
+    },
+    "ground_truth": {
+      "accepted_answers": ["Paris"],
+      "accepted_evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "A standard world atlas lists Paris as France's capital."
+      ]
+    },
+    "expected": {
+      "status": "FAIL",
+      "score": 90,
+      "errors": [
+        "Evidence item must be non-empty"
+      ],
+      "failed_stage": "structure",
+      "structure_score": 90,
+      "accuracy_score": null
+    }
+  },
+  {
+    "id": "score_clamped_at_zero",
+    "description": "Compound failures cannot push the structural score below zero.",
+    "candidate": {
+      "answer": null,
+      "confidence": 2,
+      "evidence": [
+        null,
+        "",
+        3,
+        false
+      ]
+    },
+    "ground_truth": {
+      "accepted_answers": ["Paris"],
+      "accepted_evidence": [
+        "France's official institutions are headquartered in Paris.",
+        "A standard world atlas lists Paris as France's capital."
+      ]
+    },
+    "expected": {
+      "status": "FAIL",
+      "score": 0,
+      "errors": [
+        "Missing or empty answer",
+        "Confidence must be between 0.0 and 1.0",
+        "Evidence item must be non-empty",
+        "Evidence item must be non-empty",
+        "Evidence item must be non-empty",
+        "Evidence item must be non-empty",
+        "Missing required evidence item",
+        "Missing required evidence item"
+      ],
+      "failed_stage": "structure",
+      "structure_score": 0,
+      "accuracy_score": null
+    }
   }
 ]

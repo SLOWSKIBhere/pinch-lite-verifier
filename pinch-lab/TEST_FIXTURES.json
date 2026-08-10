@@ -1,0 +1,67 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "PINCH-LAB-20260810-PREFLIGHT-01",
+  "baseline_version": "BASELINE_0",
+  "status": "prepared_not_frozen",
+  "full_experiment_authorized": false,
+  "fixture_contract": {
+    "required_fields": [
+      "fixture_id",
+      "family",
+      "baseline_version",
+      "procedure",
+      "expected_invariants",
+      "source_refs"
+    ],
+    "result_required_fields": [
+      "fixture_id",
+      "started_at",
+      "completed_at",
+      "status",
+      "actual_observation",
+      "evidence_refs"
+    ],
+    "allowed_result_statuses": [
+      "pass",
+      "fail",
+      "blocked",
+      "error",
+      "not_run"
+    ],
+    "rule": "Expected invariants must be frozen before observing the fixture result. Never overwrite a completed result."
+  },
+  "existing_sources": [
+    {
+      "source_id": "PY-DATASET-20",
+      "path": "examples.json",
+      "sha256": "fb2d5b46700d2d6ffbdb1051e96a46323d97e8989e2e09f55fdd922a4086546a",
+      "case_count": 20,
+      "purpose": "Existing deterministic Python verifier regression dataset"
+    },
+    {
+      "source_id": "STUDIO-SEEDED-4",
+      "path": "PinchWorkflowStudio.jsx",
+      "line_reference": "288-361",
+      "sha256": "ab02b33879e4b071cc149e2cddadf236c8fd8a7c47ca9de7a5c65e8cc5515c11",
+      "fixture_ids": [
+        "research-brief",
+        "creative-campaign",
+        "coding-assistant",
+        "adversarial"
+      ],
+      "purpose": "Existing Studio scenarios; not yet executed as lab fixtures"
+    }
+  ],
+  "planned_families": [
+    "STUDIO-TOPOLOGY",
+    "STUDIO-CLAIMS",
+    "STUDIO-PERMISSION",
+    "STUDIO-EXECUTION",
+    "STUDIO-AUDIT",
+    "STUDIO-SCORECARD",
+    "STUDIO-RECOVERY",
+    "PY-VERIFIER"
+  ],
+  "fixtures": [],
+  "pending_reason": "The full experiment is explicitly deferred, and the supplied model-policy section ends mid-sentence. Concrete Studio fixtures will be frozen only after authorization and protocol confirmation."
+}
