@@ -20,6 +20,15 @@ None. The full experiment has not started.
 
 ## Protocol hazards
 
+### TRANSFER-001 — Claude account requires user age verification
+
+- Phase: cloud context transfer
+- Observation: Chrome reached Claude while signed in, but the account is on hold at Anthropic's age-verification page.
+- Impact: the repository handoff is published and browser-verified, but no prompt or file has been submitted to Claude.
+- Recovery: the age-verification page is left open for the user. After the user completes it and confirms, resume with the minimal prompt in `CLAUDE_HANDOFF.md`.
+- Safety boundary: the agent did not attempt to complete or bypass identity/age verification.
+- Status: blocked pending user action; the PINCH experiment remains not started.
+
 ### PROTOCOL-001 — request ends mid-model-policy sentence
 
 The supplied text ends immediately after `If multiple models are available:`. This does not block baseline freezing or artifact creation. It does block assuming any additional model-selection rule for the full experiment. Active conservative rule: remain on the current model and do not switch.

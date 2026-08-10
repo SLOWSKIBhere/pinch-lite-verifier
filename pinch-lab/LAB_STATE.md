@@ -4,9 +4,9 @@ experiment_id: `PINCH-LAB-20260810-PREFLIGHT-01`
 
 baseline_version: `BASELINE_0`
 
-current_phase: `PREFLIGHT_COMPLETE_CLOUD_PUBLICATION_IN_PROGRESS`
+current_phase: `CLOUD_HANDOFF_PUBLISHED_AWAITING_CLAUDE_AGE_VERIFICATION`
 
-checkpoint_updated_at: `2026-08-10T19:03:43.3121676-04:00`
+checkpoint_updated_at: `2026-08-10T19:11:29.8758003-04:00`
 
 experiment_authorized: `false`
 
@@ -20,6 +20,9 @@ completed_tests:
 - Lab artifact integrity: 4 JSON files parsed, experiment/baseline IDs aligned, and all 10 required artifact files present.
 - Existing unittest suite: `PASS` — 10/10 tests passed.
 - Existing CLI dataset: `PASS` — 20/20 cases matched stored expectations.
+- GitHub branch publication: `PASS` — commit `e74bd9df518992d25cc2462d2a3d6c3454997c3d` pushed to `agent/procedural-epistemic-accountability`.
+- Draft PR verification: `PASS` — PR #1 is open, draft, and reports `mergeStateStatus: CLEAN`.
+- Remote handoff visibility: `PASS` — browser verification found the core thesis, resume protocol, and `BASELINE_0` on GitHub.
 
 failed_tests:
 
@@ -29,6 +32,7 @@ pending_tests:
 
 - All end-to-end Studio experiment fixtures; intentionally not started.
 - Confirmation or completion of the user text after `If multiple models are available:`.
+- Claude context submission after the user completes Anthropic's required age-verification flow.
 
 critical_findings:
 
@@ -38,6 +42,7 @@ critical_findings:
 - The supplied model-policy text ends at `If multiple models are available:`. The conservative active policy is to keep the current model and perform no switching.
 - Ordinary sandboxed PowerShell process creation failed before execution with Windows error 5. Read-only inspection succeeded through the managed approval path without administrator access or network use.
 - Procedural epistemic accountability is the project's central normative thesis: claims, evidence, verifier states, decisions, permissions, execution, audit, and recovery must remain attributable and must not be conflated.
+- Claude is signed in within Chrome but the account is on hold pending user-completed age verification. No prompt or file has been submitted to Claude yet.
 
 files_created:
 
@@ -57,15 +62,25 @@ files_created:
 code_changes_made:
 
 - `false` for baseline implementation.
-- Lab persistence artifacts, a repository-root Claude handoff, ignore rules, and thesis framing in `README.md` are being prepared for cloud publication.
-- No implementation file has been repaired or deleted. Publication is a separately authorized user action after the baseline freeze.
+- Lab persistence artifacts, the repository-root Claude handoff, ignore rules, thesis framing, Studio, verifier changes, tests/data, and the review skill were committed and pushed to the publication branch.
+- No implementation repair or deletion was performed during publication. Generated caches and malformed duplicate `# AGENTS.yaml` were excluded intentionally.
 
 next_exact_action:
 
-1. Publish the intentional project files on an `agent/...` branch and open a draft PR.
-2. Verify the remote handoff can be opened, then give Claude the minimal prompt from `CLAUDE_HANDOFF.md`.
-3. Stop before P2/P3. Obtain or confirm the missing model-policy continuation and explicit experiment authorization.
-4. Before an experiment, recompute the baseline fingerprint and create `BASELINE_1` for post-freeze documentation drift rather than changing `BASELINE_0`.
+1. In the open Chrome Claude tab, the user completes Anthropic's age-verification flow; the agent must not perform it.
+2. After the user confirms completion, reopen the Claude composer and submit the minimal prompt from `CLAUDE_HANDOFF.md` with the GitHub PR/handoff link or attach the handoff file.
+3. Verify Claude acknowledges the repository recovery files, then stop before P2/P3.
+4. Obtain or confirm the missing model-policy continuation and explicit experiment authorization.
+5. Before an experiment, recompute the baseline fingerprint and create `BASELINE_1` for post-freeze documentation drift rather than changing `BASELINE_0`.
+
+## Cloud handoff
+
+- repository: `SLOWSKIBhere/pinch-lite-verifier` (private)
+- branch: `agent/procedural-epistemic-accountability`
+- initial publication commit: `e74bd9df518992d25cc2462d2a3d6c3454997c3d`
+- draft PR: `https://github.com/SLOWSKIBhere/pinch-lite-verifier/pull/1`
+- remote handoff: `https://github.com/SLOWSKIBhere/pinch-lite-verifier/blob/agent/procedural-epistemic-accountability/CLAUDE_HANDOFF.md`
+- Claude transfer status: `blocked_pending_user_age_verification`
 
 ## Recovery procedure
 
