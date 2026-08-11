@@ -1,9 +1,10 @@
 {
   "schema_version": "1.0.0",
-  "experiment_id": "PINCH-LAB-20260810-PREFLIGHT-01",
-  "baseline_version": "BASELINE_0",
-  "status": "prepared_not_frozen",
-  "full_experiment_authorized": false,
+  "experiment_id": "PINCH-LAB-20260810-PHASE1-01",
+  "baseline_version": "BASELINE_1_RECONCILED",
+  "status": "frozen_ready_for_execution",
+  "full_experiment_authorized": true,
+  "frozen_at": "2026-08-11T15:45:00.0000000+00:00",
   "fixture_contract": {
     "required_fields": [
       "fixture_id",
@@ -62,6 +63,182 @@
     "STUDIO-RECOVERY",
     "PY-VERIFIER"
   ],
-  "fixtures": [],
-  "pending_reason": "The full experiment is explicitly deferred, and the supplied model-policy section ends mid-sentence. Concrete Studio fixtures will be frozen only after authorization and protocol confirmation."
+  "fixtures": [
+    {
+      "fixture_id": "PY-VERIFIER-STRUCTURAL-001",
+      "family": "PY-VERIFIER",
+      "baseline_version": "BASELINE_1_RECONCILED",
+      "procedure": "Run python verifier.py examples.json and verify all 20 cases produce expected structural/accuracy results without implementation repair.",
+      "expected_invariants": [
+        "All 20 cases execute without crash",
+        "Structural gate correctly identifies malformed answers, confidence, evidence list issues",
+        "Accuracy gate correctly distinguishes exact normalized matches from near-matches",
+        "Exit code 0 for full dataset match",
+        "No network, subprocess, or file-write operations"
+      ],
+      "source_refs": ["verifier.py:18-176", "examples.json"],
+      "procedural_epistemic_dimensions": [
+        "claim_provenance: verifier.py implements deterministic gates",
+        "verifier_independence: structural gate runs before accuracy gate",
+        "uncertainty_handling: unavailable evidence marked unverifiable",
+        "permission_boundary: read-only execution, no external calls"
+      ]
+    },
+    {
+      "fixture_id": "PY-VERIFIER-UNITTEST-001",
+      "family": "PY-VERIFIER",
+      "baseline_version": "BASELINE_1_RECONCILED",
+      "procedure": "Run python -m unittest test_verifier.py -v and verify all 10 tests pass.",
+      "expected_invariants": [
+        "10/10 tests pass",
+        "Tests cover structural validity, accuracy gate, dataset integrity",
+        "No test depends on external state or network",
+        "Test execution is deterministic and reproducible"
+      ],
+      "source_refs": ["test_verifier.py"],
+      "procedural_epistemic_dimensions": [
+        "claim_provenance: test_verifier.py defines oracle expectations",
+        "verifier_independence: tests validate verifier behavior externally",
+        "audit_fidelity: test output provides execution record"
+      ]
+    },
+    {
+      "fixture_id": "STUDIO-TOPOLOGY-001",
+      "family": "STUDIO-TOPOLOGY",
+      "baseline_version": "BASELINE_1_RECONCILED",
+      "procedure": "Verify PinchWorkflowStudio.jsx contains exactly 11 core nodes in defined order with correct enablement states.",
+      "expected_invariants": [
+        "Nodes array contains 11 core stages at lines 184-238",
+        "Node order: Intent Router, Task Decomposer, Planner, Generator, Semantic Claim Mapper, Evidence Verifier, Ground-Truth Verifier, Verifier Consensus, Permission Gate, Bounded Executor, Post-Execution Auditor",
+        "All core nodes enabled:true and locked:true by default",
+        "Optional stage pairs (Research/Creative/Coding/Data) are conditionally inserted after Planner/Generator based on objective type"
+      ],
+      "source_refs": ["PinchWorkflowStudio.jsx:184-238", "PinchWorkflowStudio.jsx:76-143"],
+      "procedural_epistemic_dimensions": [
+        "claim_provenance: node definitions are source-code assertions",
+        "execution_fidelity: pipeline order determines claim processing sequence"
+      ]
+    },
+    {
+      "fixture_id": "STUDIO-CLAIMS-001",
+      "family": "STUDIO-CLAIMS",
+      "baseline_version": "BASELINE_1_RECONCILED",
+      "procedure": "Verify atomic claim decomposition and criticality assignment logic in semantic claim mapper.",
+      "expected_invariants": [
+        "Generic claims derived from objective word count: >=14 words = 3 references, >=8 = 2, >=3 = 1, else 0",
+        "Primary generic claim receives truth:true when it has at least two references",
+        "Critical claims flagged based on claim content analysis",
+        "Evidence references attached to claims with provenance metadata"
+      ],
+      "source_refs": ["PinchWorkflowStudio.jsx:456-488"],
+      "procedural_epistemic_dimensions": [
+        "claim_provenance: evidence strength derived from objective length, not content",
+        "verifier_independence: ground-truth flag assigned before verification",
+        "uncertainty_handling: low-reference claims have limited support"
+      ]
+    },
+    {
+      "fixture_id": "STUDIO-PERMISSION-001",
+      "family": "STUDIO-PERMISSION",
+      "baseline_version": "BASELINE_1_RECONCILED",
+      "procedure": "Verify permission gate enforces tool authorization and risk boundaries.",
+      "expected_invariants": [
+        "Permission Gate evaluates consensus, requested tools, and risk level",
+        "High risk requires explicit approval",
+        "Disallowed tools trigger BLOCK decision",
+        "Tool authorization uses substring matching against allowed-tools list",
+        "Approve Once rewrites gate decision to EXECUTE with approvedOnce flag"
+      ],
+      "source_refs": ["PinchWorkflowStudio.jsx:511-538", "PinchWorkflowStudio.jsx:1413-1429"],
+      "procedural_epistemic_dimensions": [
+        "permission_boundary: explicit authorization required for high-risk actions",
+        "execution_fidelity: tool matching may allow unintended substrings"
+      ]
+    },
+    {
+      "fixture_id": "STUDIO-EXECUTION-001",
+      "family": "STUDIO-EXECUTION",
+      "baseline_version": "BASELINE_1_RECONCILED",
+      "procedure": "Verify bounded executor only executes authorized scope and records actual outcome.",
+      "expected_invariants": [
+        "Executor returns canned success:true when authorized",
+        "Executor does not run without EXECUTE decision",
+        "Actual outcome recorded separately from claimed outcome",
+        "Partial execution tracked via stage completion state"
+      ],
+      "source_refs": ["PinchWorkflowStudio.jsx:541-548", "PinchWorkflowStudio.jsx:1732-1740"],
+      "procedural_epistemic_dimensions": [
+        "execution_fidelity: canned success may not reflect actual work performed",
+        "audit_fidelity: claimed-vs-actual comparison available"
+      ]
+    },
+    {
+      "fixture_id": "STUDIO-AUDIT-001",
+      "family": "STUDIO-AUDIT",
+      "baseline_version": "BASELINE_1_RECONCILED",
+      "procedure": "Verify post-execution auditor compares requested, permitted, approved, attempted, and claimed states.",
+      "expected_invariants": [
+        "Audit compares five states: requested, permitted, approved, attempted, claimed",
+        "Audit coverage score: 0 before run, 60 + 40 * (supported/total) after",
+        "Mismatch detected when claimed differs from actual",
+        "Audit uses completion-keyword heuristic, not semantic comparison"
+      ],
+      "source_refs": ["PinchWorkflowStudio.jsx:718-779"],
+      "procedural_epistemic_dimensions": [
+        "audit_fidelity: heuristic-based comparison may miss semantic mismatches",
+        "claim_provenance: audit trail preserves state transitions"
+      ]
+    },
+    {
+      "fixture_id": "STUDIO-SCORECARD-001",
+      "family": "STUDIO-SCORECARD",
+      "baseline_version": "BASELINE_1_RECONCILED",
+      "procedure": "Verify scorecard formula produces correct metrics and final status.",
+      "expected_invariants": [
+        "Six metrics: Architecture Completeness, Claim Support Coverage, Verifier Agreement, Permission Compliance, Execution Alignment, Audit Coverage",
+        "Weights: 20%, 20%, 15%, 15%, 15%, 15%",
+        "Critical finding or BLOCK caps readiness at 35",
+        "Default static evaluation: architecture=55, support=0, agreement=0, permission=100, execution=0, audit=0, overall=11, status=Blocked"
+      ],
+      "source_refs": ["PinchWorkflowStudio.jsx:718-779"],
+      "procedural_epistemic_dimensions": [
+        "claim_provenance: scorecard derives from source-state, not experiment",
+        "uncertainty_handling: unresolved claims affect final status"
+      ]
+    },
+    {
+      "fixture_id": "STUDIO-RECOVERY-001",
+      "family": "STUDIO-RECOVERY",
+      "baseline_version": "BASELINE_1_RECONCILED",
+      "procedure": "Verify Studio Save stores snapshot only in React ref with no durable restore path.",
+      "expected_invariants": [
+        "Save action stores to currentSessionRef.current only",
+        "No localStorage, database, or file-system persistence",
+        "Restore action not implemented; session loss on unmount",
+        "Export via browser clipboard/download API is only user-facing persistence"
+      ],
+      "source_refs": ["PinchWorkflowStudio.jsx:157-178", "PinchWorkflowStudio.jsx:782-801", "PinchWorkflowStudio.jsx:1882-1885"],
+      "procedural_epistemic_dimensions": [
+        "recovery_resilience: interruption causes session loss",
+        "audit_fidelity: export is manual, not automatic"
+      ]
+    },
+    {
+      "fixture_id": "STUDIO-AUTORUN-001",
+      "family": "STUDIO-EXECUTION",
+      "baseline_version": "BASELINE_1_RECONCILED",
+      "procedure": "Verify auto-run behavior: only REQUIRE_APPROVAL pauses simulation; BLOCK/REVISE/failed do not halt.",
+      "expected_invariants": [
+        "Auto-run advances every 900ms or one stage at a time",
+        "Only REQUIRE_APPROVAL decision pauses auto-run",
+        "BLOCK, REVISE, and failed stage results do not halt later stages",
+        "Cancel marks future stages skipped but does not undo completed stages"
+      ],
+      "source_refs": ["PinchWorkflowStudio.jsx:591-713", "PinchWorkflowStudio.jsx:663-713", "PinchWorkflowStudio.jsx:2020-2026"],
+      "procedural_epistemic_dimensions": [
+        "execution_fidelity: blocked claims do not stop pipeline",
+        "permission_boundary: human override required for halted states"
+      ]
+    }
+  ]
 }
