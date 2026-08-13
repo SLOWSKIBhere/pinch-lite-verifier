@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0.0",
+  "experiment_id": "PINCH-LAB-20260810-PHASE1-01",
+  "baseline_version": "BASELINE_1_RECONCILED",
+  "updated_at": "2026-08-11T15:45:00.0000000+00:00",
+  "phase": "PHASE_1_EXECUTION_IN_PROGRESS",
+  "summary": {
+    "completed": 0,
+    "passed": 0,
+    "failed": 0,
+    "blocked": 0,
+    "errors": 0,
+    "experiment_fixtures_run": 0
+  },
+  "preflight_checks": [
+    {
+      "check_id": "P0-BASELINE-INVENTORY",
+      "status": "pass",
+      "observation": "Pre-existing working tree inventory and dirty state captured without modification.",
+      "evidence_refs": [
+        "pinch-lab/BASELINE.md#baseline-integrity"
+      ]
+    },
+    {
+      "check_id": "P0-BEHAVIOR-CAPTURE",
+      "status": "pass",
+      "observation": "Studio and Python verifier topology, configuration, thresholds, permissions, scorecard, and execution behavior captured from source.",
+      "evidence_refs": [
+        "pinch-lab/BASELINE.md"
+      ]
+    },
+    {
+      "check_id": "P1-ARTIFACT-JSON",
+      "status": "pass",
+      "observation": "4 JSON files parsed; experiment and baseline IDs aligned; all 10 required artifact files present.",
+      "completed_at": "2026-08-10T18:50:33.9747591-04:00",
+      "evidence_refs": [
+        "pinch-lab/"
+      ]
+    },
+    {
+      "check_id": "P1-UNITTEST",
+      "status": "pass",
+      "command": "python -m unittest test_verifier.py -v",
+      "exit_code": 0,
+      "observation": "Ran 10 tests in 0.006s; OK.",
+      "completed_at": "2026-08-10T18:50:33.9747591-04:00",
+      "evidence_refs": [
+        "test_verifier.py"
+      ]
+    },
+    {
+      "check_id": "P1-CLI-DATASET",
+      "status": "pass",
+      "command": "python verifier.py examples.json",
+      "exit_code": 0,
+      "observation": "DATASET: PASS (20/20 cases matched expectations)",
+      "completed_at": "2026-08-10T18:50:33.9747591-04:00",
+      "evidence_refs": [
+        "verifier.py",
+        "examples.json"
+      ]
+    }
+  ],
+  "experiment_results": []
+}

@@ -1,57 +1,116 @@
+import copy
+import io
+import json
 import unittest
+from contextlib import redirect_stderr, redirect_stdout
+from pathlib import Path
 
-from verifier import format_result, verify
+from verifier import (
+    format_result,
+    main,
+    validate_accuracy,
+    verify,
+    verify_case,
+)
+
+
+DATASET_PATH = Path(__file__).with_name("examples.json")
+EXPECTED_RESULT_FIELDS = {
+    "status",
+    "score",
+    "errors",
+    "failed_stage",
+    "structure_score",
+    "accuracy_score",
+}
 
 
 class VerifierTests(unittest.TestCase):
-    def test_valid_candidate_passes(self):
-        result = verify({
-            "answer": "Paris is the capital of France.",
-            "confidence": 0.8,
-            "evidence": ["A reference atlas", "A geography textbook"],
-        })
-        self.assertEqual("PASS", result["status"])
-        self.assertEqual(100, result["score"])
-        self.assertEqual([], result["errors"])
+    @classmethod
+    def setUpClass(cls):
+        cls.cases = json.loads(DATASET_PATH.read_text(encoding="utf-8"))
+        cls.cases_by_id = {case["id"]: case for case in cls.cases}
 
-    def test_empty_answer_costs_thirty(self):
-        result = verify({"answer": "  ", "confidence": 0.5, "evidence": ["a", "b"]})
+    def test_dataset_has_exactly_twenty_unique_cases(self):
+        self.assertEqual(20, len(self.cases))
+        self.assertEqual(20, len(self.cases_by_id))
+
+    def test_every_case_has_an_explicit_complete_oracle(self):
+        for case in self.cases:
+            with self.subTest(case=case["id"]):
+                self.assertIsInstance(case.get("description"), str)
+                self.assertIsInstance(case.get("candidate"), dict)
+                self.assertIsInstance(case.get("ground_truth"), dict)
+                self.assertEqual(
+                    EXPECTED_RESULT_FIELDS,
+                    set(case.get("expected", {})),
+                )
+
+    def test_all_adversarial_cases_match_hand_reviewed_expectations(self):
+        for case in self.cases:
+            with self.subTest(case=case["id"]):
+                self.assertEqual(case["expected"], verify_case(case))
+
+    def test_factually_wrong_answer_passes_structure_but_fails_accuracy(self):
+        case = self.cases_by_id["wrong_answer_good_evidence"]
+
+        self.assertEqual("PASS", verify(case["candidate"])["status"])
+        result = verify_case(case)
         self.assertEqual("FAIL", result["status"])
-        self.assertEqual(70, result["score"])
+        self.assertEqual("accuracy", result["failed_stage"])
+        self.assertEqual(50, result["score"])
 
-    def test_missing_confidence_costs_twenty(self):
-        result = verify({"answer": "answer", "evidence": ["a", "b"]})
-        self.assertEqual(80, result["score"])
-        self.assertIn("Confidence must be between 0.0 and 1.0", result["errors"])
+    def test_expected_values_do_not_drive_computed_result(self):
+        case = copy.deepcopy(self.cases_by_id["valid_baseline"])
+        original_expected = copy.deepcopy(case["expected"])
+        case["expected"] = {
+            "status": "FAIL",
+            "score": 0,
+            "errors": ["fabricated oracle result"],
+        }
 
-    def test_out_of_range_confidence_is_invalid(self):
-        result = verify({"answer": "answer", "confidence": 1.1, "evidence": ["a", "b"]})
-        self.assertEqual(80, result["score"])
+        self.assertEqual(original_expected, verify_case(case))
 
-    def test_missing_evidence_applies_list_and_item_penalties(self):
-        result = verify({"answer": "answer", "confidence": 0.5})
-        self.assertEqual(60, result["score"])
-        self.assertEqual(2, result["errors"].count("Missing required evidence item"))
+    def test_malformed_ground_truth_is_a_dataset_error(self):
+        case = copy.deepcopy(self.cases_by_id["valid_baseline"])
+        case["ground_truth"]["accepted_evidence"] = ["same", "same"]
 
-    def test_empty_evidence_item_is_penalized(self):
-        result = verify({"answer": "answer", "confidence": 0.8, "evidence": ["source", ""]})
-        self.assertEqual(80, result["score"])
-        self.assertIn("Evidence item must be non-empty", result["errors"])
+        with self.assertRaisesRegex(ValueError, "two distinct items"):
+            verify_case(case)
 
-    def test_unsupported_high_confidence_is_penalized(self):
-        result = verify({"answer": "answer", "confidence": 0.81, "evidence": ["source"]})
-        self.assertEqual(70, result["score"])
-        self.assertIn(
-            "High confidence is unsupported by sufficient evidence", result["errors"]
+    def test_accuracy_requires_a_structurally_valid_candidate(self):
+        candidate = {"answer": "", "confidence": 0.5, "evidence": ["a", "b"]}
+        ground_truth = {
+            "accepted_answers": ["answer"],
+            "accepted_evidence": ["a", "b"],
+        }
+
+        with self.assertRaisesRegex(ValueError, "structurally valid"):
+            validate_accuracy(candidate, ground_truth)
+
+    def test_legacy_verify_remains_structure_only(self):
+        candidate = self.cases_by_id["wrong_answer_good_evidence"]["candidate"]
+        self.assertEqual(
+            {"status": "PASS", "score": 100, "errors": []},
+            verify(candidate),
         )
 
-    def test_score_never_falls_below_zero(self):
-        result = verify({"answer": "", "confidence": 2, "evidence": [None, "", 3]})
-        self.assertEqual(0, result["score"])
-
-    def test_readable_pass_output(self):
+    def test_readable_pass_output_is_backward_compatible(self):
         output = format_result({"status": "PASS", "score": 100, "errors": []})
         self.assertEqual("STATUS: PASS\nSCORE: 100\nERRORS: None", output)
+
+    def test_cli_checks_all_twenty_expected_results(self):
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with redirect_stdout(stdout), redirect_stderr(stderr):
+            exit_code = main([str(DATASET_PATH)])
+
+        self.assertEqual(0, exit_code)
+        self.assertEqual("", stderr.getvalue())
+        self.assertIn(
+            "DATASET: PASS (20/20 cases matched expectations)",
+            stdout.getvalue(),
+        )
 
 
 if __name__ == "__main__":
