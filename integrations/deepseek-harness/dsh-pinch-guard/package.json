@@ -1,0 +1,24 @@
+{
+  "name": "@pinch/dsh-pinch-guard-pilot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --import tsx --test tests/*.test.ts"
+  },
+  "devDependencies": {
+    "tsx": "4.20.5"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "0.1.0-rc.8",
+    "@deepseek-ai/dsh-tools": "0.1.0-rc.8"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-tools": {
+      "optional": true
+    }
+  }
+}
