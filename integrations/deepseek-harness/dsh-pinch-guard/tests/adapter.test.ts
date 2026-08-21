@@ -8,12 +8,20 @@ import type { AuthorityReceipt } from '../src/policy.ts'
 
 type Listener = (...args: any[]) => any
 
+type DurableEvent = { type: string; data: unknown }
+
 type FakeExecution = {
   token: symbol
   callId: string
   name: string
   arguments: unknown
   signal: AbortSignal
+  agent?: {
+    session: {
+      events: DurableEvent[]
+      append(type: string, data: unknown): void
+    }
+  }
 }
 
 class FakeContext {
@@ -56,13 +64,26 @@ function baseReceipt(overrides: Partial<AuthorityReceipt> = {}): AuthorityReceip
   }
 }
 
-function execution(path = '/repo/file.txt'): FakeExecution {
+function execution(path = '/repo/file.txt', withAgent = true): FakeExecution {
+  const events: DurableEvent[] = []
   return {
     token: Symbol('exec'),
     callId: 'call-1',
     name: 'write',
     arguments: { path },
     signal: new AbortController().signal,
+    ...(withAgent
+      ? {
+          agent: {
+            session: {
+              events,
+              append(type: string, data: unknown) {
+                events.push({ type, data })
+              },
+            },
+          },
+        }
+      : {}),
   }
 }
 
@@ -110,17 +131,37 @@ async function simulateDispatch(ctx: FakeContext, exec: FakeExecution) {
   return { preDecision, bodyCalls }
 }
 
-test('valid receipt crosses pre-execute and monotonic guard exactly once', async () => {
+test('valid receipt logs durable authority and crosses monotonic guard exactly once', async () => {
   await withHarness(baseReceipt(), async (ctx) => {
     const exec = execution()
     const first = await simulateDispatch(ctx, exec)
     assert.equal(first.preDecision.kind, 'allow')
     assert.equal(first.bodyCalls, 1)
 
+    const events = exec.agent!.session.events
+    assert.equal(events.length, 1)
+    assert.equal(events[0].type, 'pinch/authority-admitted')
+    const data = events[0].data as Record<string, unknown>
+    assert.equal(data.callId, 'call-1')
+    assert.equal(data.runId, 'run-adapter-1')
+    assert.equal(data.intentDigest, 'sha256:intent-adapter-1')
+    assert.equal(data.receiptId, 'receipt-adapter-1')
+    assert.equal(data.callOrdinal, 1)
+    assert.match(String(data.evidenceDigest), /^sha256:[0-9a-f]{64}$/)
+
     const result = ctx.listeners.get('tools/result')
     assert.ok(result)
     result(exec, { isError: false })
     assert.match(ctx.guardListener!(exec) ?? '', /REFLEX_GATE_NOT_CROSSED/)
+  })
+})
+
+test('protected call without durable agent session produces zero dispatch', async () => {
+  await withHarness(baseReceipt(), async (ctx) => {
+    const outcome = await simulateDispatch(ctx, execution('/repo/file.txt', false))
+    assert.equal(outcome.preDecision.kind, 'deny')
+    assert.equal(outcome.bodyCalls, 0)
+    assert.match(outcome.preDecision.reason, /MISSING_DURABLE_SESSION/)
   })
 })
 
