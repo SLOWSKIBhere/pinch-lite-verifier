@@ -1,0 +1,34 @@
+name: PINCH verification gates
+
+on:
+  push:
+    branches:
+      - main
+      - pinch-dsh-integration
+  pull_request:
+
+jobs:
+  python-verifier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run PINCH-Lite tests
+        run: python -m unittest test_verifier.py -v
+
+  dsh-authority-policy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: integrations/deepseek-harness/dsh-pinch-guard
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install policy test runner only
+        run: npm install --omit=peer --ignore-scripts
+      - name: Run authority-policy regressions
+        run: npm test

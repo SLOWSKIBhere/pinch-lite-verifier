@@ -54,3 +54,23 @@ Run the tests with:
 ```console
 python -m unittest test_verifier.py -v
 ```
+
+## PINCH × DeepSeek Harness pilot
+
+This repository now carries a pilot procedural integration for DeepSeek Harness
+under `integrations/deepseek-harness/` and `.dsh/skills/`.
+
+The governing reflex is:
+
+```text
+SENSE -> CLAIM -> VERIFY -> AUTHORIZE -> ACT -> OBSERVE -> AUDIT -> REMEMBER
+```
+
+`AGENTS.md` contains the repository-level invariants. The DeepSeek skills keep
+procedural detail out of ordinary one-shot prompts, while the `dsh-pinch-guard`
+pilot binds protected mutations to a verifier PASS, current run id, current
+intent digest, explicit tool/path scope, expiry, and bounded call count.
+
+The guard intentionally does not mint its own authority. See
+`integrations/deepseek-harness/README.md` for the trust boundary and deployment
+model.
