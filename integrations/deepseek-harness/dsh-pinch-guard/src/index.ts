@@ -1,7 +1,9 @@
+import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import type { Context } from '@deepseek-ai/cordis'
 import type { PreToolDecision, ToolExecution } from '@deepseek-ai/dsh-tools'
 import { evaluateAuthority, type AuthorityReceipt } from './policy.ts'
+import type {} from './events.ts'
 
 export const name = 'pinch-guard'
 export const inject = ['tools']
@@ -21,6 +23,8 @@ export interface Config {
   intentDigestEnv?: string
   /** Optional environment variable carrying the execution cwd used for path resolution. */
   cwdEnv?: string
+  /** Require protected calls to have an owning Session so authority is durably replayable. Default: true. */
+  requireDurableSession?: boolean
 }
 
 function requiredEnv(name: string): string | undefined {
@@ -31,6 +35,11 @@ function requiredEnv(name: string): string | undefined {
 async function loadReceipt(path: string): Promise<AuthorityReceipt> {
   const text = await readFile(path, 'utf8')
   return JSON.parse(text) as AuthorityReceipt
+}
+
+function digestEvidence(evidence: readonly string[]): string {
+  const hex = createHash('sha256').update(JSON.stringify(evidence)).digest('hex')
+  return `sha256:${hex}`
 }
 
 export function apply(ctx: Context, config: Config): void {
@@ -52,6 +61,7 @@ export function apply(ctx: Context, config: Config): void {
   const runIdEnv = config.runIdEnv ?? 'PINCH_RUN_ID'
   const intentDigestEnv = config.intentDigestEnv ?? 'PINCH_INTENT_DIGEST'
   const cwdEnv = config.cwdEnv ?? 'PINCH_CWD'
+  const requireDurableSession = config.requireDurableSession ?? true
 
   // A pre-execute PASS reserves the receipt call before downstream policy runs.
   // This is intentionally fail-closed: a later denial or rejected approval may
@@ -61,6 +71,13 @@ export function apply(ctx: Context, config: Config): void {
 
   ctx.on('tools/pre-execute', async (exec, next): Promise<PreToolDecision> => {
     if (!protectedTools.has(exec.name)) return next()
+
+    if (requireDurableSession && !exec.agent) {
+      return {
+        kind: 'deny',
+        reason: 'PINCH_DENY MISSING_DURABLE_SESSION: protected autonomous-agent work must have an owning Session.',
+      }
+    }
 
     const runId = requiredEnv(runIdEnv)
     const intentDigest = requiredEnv(intentDigestEnv)
@@ -103,9 +120,37 @@ export function apply(ctx: Context, config: Config): void {
       }
     }
 
-    // Reserve before delegation. The monotonic guard below requires this exact
-    // execution token, so a later pre-execute listener cannot manufacture an
-    // admitted side-effecting dispatch.
+    // Make authorization a durable fact before permitting the execution token
+    // to cross the monotonic guard. DeepSeek already logs tool/call before this
+    // point and tool/result afterwards, so callId links the three facts on replay.
+    if (exec.agent) {
+      try {
+        exec.agent.session.append('pinch/authority-admitted', {
+          version: 1,
+          runId,
+          intentDigest,
+          receiptId: receipt.receiptId,
+          callId: exec.callId,
+          toolName: exec.name,
+          verifier: receipt.verification.verifier,
+          evidenceCount: receipt.verification.evidence.length,
+          evidenceDigest: digestEvidence(receipt.verification.evidence),
+          expiresAt: receipt.expiresAt,
+          callOrdinal: used + 1,
+          ...(decision.resolvedPath ? { targetPath: decision.resolvedPath } : {}),
+        })
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        return {
+          kind: 'deny',
+          reason: `PINCH_DENY DURABLE_AUTHORITY_LOG_FAILED: ${message}`,
+        }
+      }
+    }
+
+    // Reserve only after the durable authority event succeeds. The monotonic
+    // guard requires this exact execution token, so a later pre-execute listener
+    // cannot manufacture an admitted side-effecting dispatch.
     callsUsed.set(receipt.receiptId, used + 1)
     admitted.add(exec.token)
 
@@ -120,12 +165,15 @@ export function apply(ctx: Context, config: Config): void {
     return 'PINCH_DENY REFLEX_GATE_NOT_CROSSED: protected tool did not pass verified authority.'
   })
 
-  // Final immutable outcome observation is also the cleanup boundary for the
-  // per-dispatch admission token. Durable audit/receipt projection belongs in
-  // the next integration phase; this listener never rewrites the result.
+  // DeepSeek's ordinary durable `tool/result` is the canonical execution
+  // outcome. We do not duplicate it; this listener only clears the live token.
+  // Trusted postcondition auditors append `pinch/audit-recorded` separately.
   ctx.on('tools/result', (exec) => {
     admitted.delete(exec.token)
   })
 }
 
 export * from './policy.ts'
+export * from './audit.ts'
+export * from './ledger.ts'
+export type * from './events.ts'
