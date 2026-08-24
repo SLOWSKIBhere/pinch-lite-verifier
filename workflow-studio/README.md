@@ -1,63 +1,33 @@
-# PINCH Workflow Studio
+# PINCH TraceNLI
 
-PINCH Workflow Studio is a browser-based React prototype for designing and
-deterministically simulating verification-gated agent workflows.
+TraceNLI is a browser-based provenance-preserving semantic evidence verification
+lab. It accepts candidate prose, maps atomic claims, deterministically validates
+candidate evidence against original source text, runs two independently-input
+semantic decision procedures, applies deterministic consensus, evaluates action
+permission separately, audits bounded action postconditions, and hashes a receipt.
 
-The application separates generation, evidence checking, ground-truth checking,
-consensus, permission, bounded execution, and post-execution auditing. It does
-not call external models, tools, or networks. Every run is labeled and implemented
-as a deterministic simulation.
-
-## Run locally
-
-Requirements:
-
-- Node.js 24 or a compatible current Node.js release
-- npm
+## Run
 
 ```bash
-npm install
 npm run dev
 ```
 
-Open the local URL printed by Vite.
-
-## Validate
+## Check
 
 ```bash
-npm run build
-npm test
-```
-
-Run only the controlled experiment:
-
-```bash
+npm run check
 npm run experiment
 ```
 
-## Controlled experiment
+## Epistemic scope
 
-The automated experiment holds the application version, state-machine logic,
-interaction procedure, and execution environment constant while changing the
-seeded workflow condition:
-
-1. verified research control;
-2. adversarial treatment;
-3. unresolved creative workflow with human rejection.
-
-The assertions check that the control reaches `EXECUTE`, the adversarial workflow
-reaches `BLOCK` without running the executor, and the unresolved workflow pauses
-for approval before rejection blocks execution.
-
-See [docs/controlled-experiment.md](docs/controlled-experiment.md) for the design,
-results, and interpretation limits.
-
-## Important limitations
-
-- This is a workflow-simulation prototype, not a live multi-agent runtime.
-- Seeded evidence and ground-truth labels are fixtures, not independently
-  researched facts.
-- Passing tests establish the programmed state-machine behavior; they do not
-  establish that PINCH improves real-world model accuracy.
-- Automated interaction tests run in jsdom. A real-browser visual and responsive
-  layout check remains separate.
+- The included semantic verifiers are deterministic lexical proxies. They execute
+  real decision code but are not external LLM calls and do not establish truth.
+- Model scores are raw decision signals with
+  `NOT_EMPIRICALLY_CALIBRATED` status, not truth probabilities.
+- The browser action adapter is in-memory, intent-digest-bound, and allowlisted.
+  No live GitHub write connector or authority is configured.
+- GitHub source support operates on supplied frozen snapshots; it does not fetch
+  the public network from the browser.
+- Passing tests demonstrate the programmed boundaries only. They do not prove
+  production safety, factual correctness, or real-world accuracy gains.
