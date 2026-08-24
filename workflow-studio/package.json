@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run --environment jsdom",
-    "experiment": "vitest run tests/controlled-experiment.test.jsx --environment jsdom --reporter=verbose",
+    "experiment": "vitest run tests/tracenli.test.js --environment jsdom --reporter=verbose",
     "check": "npm run build && npm test"
   },
   "dependencies": {
