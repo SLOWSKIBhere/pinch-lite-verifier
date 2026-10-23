@@ -13,6 +13,7 @@ _TIMESTAMP = re.compile(
     r"(?P<start>(?:\d{1,2}:)?\d{2}:\d{2}[,.]\d{1,3})\s+-->\s+"
     r"(?P<end>(?:\d{1,2}:)?\d{2}:\d{2}[,.]\d{1,3})"
 )
+_SHA256 = re.compile(r"^[0-9a-fA-F]{64}$")
 
 class TranscriptError(ValueError):
     """Raised when a transcript cannot be parsed safely."""
@@ -35,8 +36,11 @@ def _seconds(value: str) -> float:
         raise TranscriptError("Timestamps must be non-negative")
     return result
 
-def parse_transcript(path: str | Path) -> list[dict[str, Any]]:
-    """Parse UTF-8 SRT/VTT cues, or retain plain text as explicitly untimed lines."""
+def parse_transcript(path: str | Path, media_sha256: str | None = None) -> list[dict[str, Any]]:
+    """Parse a transcript; optionally bind its events to a verified media hash."""
+    if media_sha256 is not None and not _SHA256.fullmatch(media_sha256):
+        raise TranscriptError("media_sha256 must be a 64-character hexadecimal SHA-256 digest")
+    media_sha256 = media_sha256.lower() if media_sha256 else None
     source = Path(path).expanduser().resolve()
     if not source.is_file():
         raise TranscriptError(f"Transcript file does not exist: {source}")
@@ -75,7 +79,7 @@ def parse_transcript(path: str | Path) -> list[dict[str, Any]]:
             events.append({
                 "schema_version": "1.0",
                 "event_id": f"trn_{len(events):06d}",
-                "media_sha256": None,
+                "media_sha256": media_sha256,
                 "timestamp_start": round(start, 3),
                 "timestamp_end": round(end, 3),
                 "event_type": "transcript_observation",
@@ -95,7 +99,7 @@ def parse_transcript(path: str | Path) -> list[dict[str, Any]]:
     return [{
         "schema_version": "1.0",
         "event_id": f"trn_{index:06d}",
-        "media_sha256": None,
+        "media_sha256": media_sha256,
         "timestamp_start": None,
         "timestamp_end": None,
         "event_type": "transcript_observation",
