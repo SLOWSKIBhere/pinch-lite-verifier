@@ -1,13 +1,19 @@
 import tempfile
 import unittest
 from pathlib import Path
+
 from artifactlens.transcript import TranscriptError, parse_transcript
+
 
 class TranscriptTests(unittest.TestCase):
     def test_srt_preserves_timestamps_and_text(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "sample.srt"
-            path.write_text("1\n00:00:01,200 --> 00:00:02,500\nThe mechanism is ancient.\n\n2\n00:00:03,000 --> 00:00:04,000\nSecond cue.\n", encoding="utf-8")
+            path.write_text(
+                "1\n00:00:01,200 --> 00:00:02,500\nThe mechanism is ancient.\n\n"
+                "2\n00:00:03,000 --> 00:00:04,000\nSecond cue.\n",
+                encoding="utf-8",
+            )
             events = parse_transcript(path)
         self.assertEqual(2, len(events))
         self.assertEqual(1.2, events[0]["timestamp_start"])
@@ -24,6 +30,21 @@ class TranscriptTests(unittest.TestCase):
         self.assertIsNone(events[0]["timestamp_start"])
         self.assertEqual("not_provided", events[0]["provenance"]["timing"])
 
+    def test_associated_media_hash_is_preserved(self):
+        media_hash = "a" * 64
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "sample.srt"
+            path.write_text("1\n00:00:01,000 --> 00:00:02,000\nText.\n", encoding="utf-8")
+            events = parse_transcript(path, media_sha256=media_hash)
+        self.assertEqual(media_hash, events[0]["media_sha256"])
+
+    def test_invalid_media_hash_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "sample.txt"
+            path.write_text("Text.", encoding="utf-8")
+            with self.assertRaises(TranscriptError):
+                parse_transcript(path, media_sha256="not-a-hash")
+
     def test_end_before_start_is_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "bad.srt"
@@ -34,6 +55,7 @@ class TranscriptTests(unittest.TestCase):
     def test_missing_file_is_rejected(self):
         with self.assertRaises(TranscriptError):
             parse_transcript("does-not-exist.srt")
+
 
 if __name__ == "__main__":
     unittest.main()
