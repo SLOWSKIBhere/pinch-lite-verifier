@@ -40,10 +40,14 @@ def build_parser() -> argparse.ArgumentParser:
     transcript = commands.add_parser("parse-transcript", help="Parse local SRT/VTT/plain transcript")
     transcript.add_argument("input")
     transcript.add_argument("--out", required=True)
+    transcript.add_argument("--media-sha256", help="Optional SHA-256 of the associated video")
     gate = commands.add_parser("review-gate", help="Validate claim evidence references")
     gate.add_argument("--events", required=True)
     gate.add_argument("--claims", required=True)
     gate.add_argument("--out", required=True)
+    combine = commands.add_parser("combine-events", help="Combine event JSONL files and reject duplicate event IDs")
+    combine.add_argument("--inputs", nargs="+", required=True)
+    combine.add_argument("--out", required=True)
     evaluate = commands.add_parser("evaluate", help="Evaluate predictions against reviewed labels")
     evaluate.add_argument("--dataset", required=True)
     evaluate.add_argument("--out", required=True)
@@ -53,12 +57,30 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         if args.command == "parse-transcript":
-            events = parse_transcript(args.input)
+            events = parse_transcript(args.input, media_sha256=args.media_sha256)
             _write_jsonl(args.out, events)
             print(json.dumps({
                 "status": "PARSED", "event_count": len(events),
                 "output": str(Path(args.out).expanduser().resolve()),
                 "warning": "Transcript observations do not establish factual truth.",
+            }, indent=2))
+            return 0
+        if args.command == "combine-events":
+            combined: list[dict[str, Any]] = []
+            seen: set[str] = set()
+            for input_path in args.inputs:
+                for event in _read_jsonl(input_path):
+                    event_id = event.get("event_id")
+                    if not isinstance(event_id, str) or not event_id.strip():
+                        raise ValueError(f"Event without event_id in {input_path}")
+                    if event_id in seen:
+                        raise ValueError(f"Duplicate event_id {event_id!r}; refusing to merge ambiguous provenance")
+                    seen.add(event_id)
+                    combined.append(event)
+            _write_jsonl(args.out, combined)
+            print(json.dumps({
+                "status": "COMBINED", "event_count": len(combined),
+                "input_count": len(args.inputs), "output": str(Path(args.out).expanduser().resolve()),
             }, indent=2))
             return 0
         if args.command == "review-gate":
