@@ -33,12 +33,18 @@ def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def _ocr_frame(frame: Any) -> tuple[str, list[dict[str, Any]]]:
+def _ocr_frame(frame: Any, language: str = "eng") -> tuple[str, list[dict[str, Any]]]:
     try:
-        data = pytesseract.image_to_data(frame, output_type=Output.DICT)
+        data = pytesseract.image_to_data(
+            frame, lang=language, output_type=Output.DICT
+        )
     except pytesseract.TesseractNotFoundError as exc:
         raise PipelineError(
             "Tesseract executable not found. Install Tesseract OCR and ensure it is on PATH."
+        ) from exc
+    except pytesseract.TesseractError as exc:
+        raise PipelineError(
+            f"Tesseract OCR failed for language {language!r}: {exc}"
         ) from exc
 
     words: list[dict[str, Any]] = []
@@ -73,13 +79,14 @@ def process_video(
     language: str = "eng",
 ) -> dict[str, Any]:
     """Sample a local video and write an event ledger plus manifest."""
+    if interval_seconds <= 0:
+        raise ValueError("interval_seconds must be greater than zero")
+
     source = Path(video_path).expanduser().resolve()
     output = Path(output_dir).expanduser().resolve()
 
     if not source.is_file():
         raise PipelineError(f"Video file does not exist: {source}")
-    if interval_seconds <= 0:
-        raise ValueError("interval_seconds must be greater than zero")
     if not shutil.which("tesseract"):
         raise PipelineError(
             "Tesseract executable not found. Install Tesseract OCR and ensure it is on PATH."
@@ -123,7 +130,7 @@ def process_video(
                 frame_bytes = buffer.tobytes()
                 frame_path.write_bytes(frame_bytes)
 
-                text, words = _ocr_frame(frame)
+                text, words = _ocr_frame(frame, language=language)
                 event = {
                     "schema_version": "1.0",
                     "event_id": f"evt_{event_index:06d}",
@@ -158,6 +165,7 @@ def process_video(
         "frame_count_reported_by_container": frame_count,
         "sampling_interval_seconds": interval_seconds,
         "ocr_engine": "Tesseract",
+        "ocr_language": language,
         "opencv_version": cv2.__version__,
         "python_version": platform.python_version(),
         "events_file": "events.jsonl",
