@@ -43,13 +43,14 @@ class ResearchCliTests(unittest.TestCase):
             output = root / "metrics.json"
             dataset.write_text(
                 '{"gold_label":"contradicted","predicted_label":"supported"}\n'
+                '{"gold_label":"insufficient_evidence","predicted_label":"human_review"}\n'
                 '{"gold_label":"supported","predicted_label":"supported"}\n',
                 encoding="utf-8",
             )
             self.assertEqual(0, main(["evaluate", "--dataset", str(dataset), "--out", str(output)]))
             metrics = json.loads(output.read_text(encoding="utf-8"))
             self.assertEqual(0.5, metrics["unsupported_claim_escape_rate"])
-            self.assertEqual(0.5, metrics["exact_label_accuracy"])
+            self.assertAlmostEqual(2 / 3, metrics["exact_label_accuracy"])
 
 
 if __name__ == "__main__":
