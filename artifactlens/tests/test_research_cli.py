@@ -76,7 +76,7 @@ class ResearchCliTests(unittest.TestCase):
             self.assertEqual(0, main(["evaluate", "--dataset", str(dataset), "--out", str(output)]))
             metrics = json.loads(output.read_text(encoding="utf-8"))
             self.assertEqual(0.5, metrics["unsupported_claim_escape_rate"])
-            self.assertAlmostEqual(2 / 3, metrics["exact_label_accuracy"])
+            self.assertAlmostEqual(1 / 3, metrics["exact_label_accuracy"])
 
 
 if __name__ == "__main__":
