@@ -1,0 +1,4 @@
+{"item_id":"synthetic-001","gold_label":"supported","predicted_label":"supported","note":"Synthetic metric smoke test only; not historical ground truth."}
+{"item_id":"synthetic-002","gold_label":"contradicted","predicted_label":"supported","note":"Synthetic unsupported-claim escape case."}
+{"item_id":"synthetic-003","gold_label":"insufficient_evidence","predicted_label":"human_review","note":"Synthetic abstention case."}
+{"item_id":"synthetic-004","gold_label":"supported","predicted_label":"human_review","note":"Synthetic supported-claim abstention case."}
