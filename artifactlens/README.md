@@ -1,44 +1,107 @@
 # ArtifactLens — local video evidence research prototype
 
-ArtifactLens is an isolated research module inside PINCH-Lite. It does not modify the existing root verifier or `workflow-studio/`. Its first vertical slice ingests a local video, samples frames at a fixed interval, runs local OCR, and writes provenance-bearing JSONL events. Claim verification is intentionally not automated in this first stage.
+ArtifactLens is an isolated research module inside PINCH-Lite. It leaves the root verifier and workflow-studio unchanged. It currently provides local video frame sampling/OCR, local transcript ingestion, a deterministic evidence-reference gate, and metrics for manually labeled claim-verification experiments.
 
 ## Requirements
 
 - Python 3.11+
-- FFmpeg is not required.
-- Install Python dependencies from this directory.
-- Tesseract OCR must be installed separately and available on PATH for OCR to run. The pipeline should fail clearly if it is missing; no cloud inference is used.
+- Windows PowerShell instructions below; other OSes should work with equivalent paths.
+- Tesseract OCR installed separately and available on PATH for video OCR.
+- No cloud inference is used by the implemented pipeline.
+- FFmpeg is not required for the current OpenCV video sampler.
 
 ## Local setup (PowerShell)
 
-```powershell
+From the repository root:
+
+~~~powershell
 cd artifactlens
 py -3.11 -m venv .venv
-.\.venv\Scripts\Activate.ps1
+.\\.venv\\Scripts\\Activate.ps1
 python -m pip install --upgrade pip
 pip install -e ".[dev]"
 python -m unittest discover -s tests -v
-```
+~~~
 
-Install Tesseract OCR for Windows separately, then verify `tesseract --version`.
+Install Tesseract OCR for Windows separately, then verify tesseract --version.
 
-## Run on a video
+## Step 1 — Sample a local video
 
-```powershell
-python -m artifactlens.cli "C:\path\to\video.mp4" --out .\runs\video-001 --interval 2.0
-```
+Run from the artifactlens directory:
 
-Output:
-- `manifest.json`: media SHA-256, sampling settings, tool versions, and run metadata.
-- `events.jsonl`: one event per sampled frame, with timestamp, frame hash, OCR text, and OCR word boxes.
-- `frames/`: sampled frame images for human review.
+~~~powershell
+artifactlens "C:\\path\\to\\video.mp4" --out .\\runs\\video-001 --interval 2.0
+~~~
 
-Treat generated OCR as an observation, not a verified claim. Do not pass video claims as supported merely because OCR or a model produced them.
+Or use the module form:
 
-## Research boundary
+~~~powershell
+python -m artifactlens.cli "C:\\path\\to\\video.mp4" --out .\\runs\\video-001 --interval 2.0
+~~~
 
-This vertical slice does **not** yet perform speech transcription, historical-source retrieval, semantic claim entailment, or calibrated confidence. Those are later phases. It does not establish product novelty or accuracy. Never use personal/private media without permission; keep test media local and do not commit videos or generated frames.
+Outputs include manifest.json, events.jsonl, and sampled images under frames/. Each OCR event contains a media hash, frame hash, timestamp, method, and frame locator.
+
+## Step 2 — Parse the supplied transcript locally
+
+SRT and WebVTT cue timestamps are preserved. Plain-text transcripts are emitted as untimed lines; timestamps are never guessed.
+
+~~~powershell
+artifactlens-research parse-transcript "C:\\path\\to\\video-transcript.srt" --out .\\runs\\video-001\\transcript-events.jsonl
+~~~
+
+If the video and transcript refer to the same source, retain the video run ID and transcript hash in your experiment notes. Transcript events have IDs such as trn_000000; OCR events use IDs such as evt_000000.
+
+## Step 3 — Prepare a claim ledger
+
+Create a UTF-8 JSONL file, one claim per line. Every evidence event ID must exist in the OCR or transcript event files you provide to the gate.
+
+Example claims.jsonl:
+
+~~~json
+{"claim_id":"claim-001","text":"The narrator says the mechanism tracked astronomical cycles.","evidence_event_ids":["trn_000000"],"external_source_ids":["source-review-001"]}
+~~~
+
+Combine event ledgers into one JSONL file before gating if a claim cites both OCR and transcript events. External source IDs must resolve to a separate human-maintained source register or research notes; the gate does not fetch or assess source contents.
+
+~~~powershell
+artifactlens-research review-gate --events .\\runs\\video-001\\all-events.jsonl --claims .\\runs\\video-001\\claims.jsonl --out .\\runs\\video-001\\review-decisions.jsonl
+~~~
+
+Gate statuses distinguish missing or invalid evidence references from claims ready for independent review. READY_FOR_HUMAN_REVIEW is not a truth judgment. This version does not automatically verify semantic entailment, source quality, or historical accuracy.
+
+## Step 4 — Run benchmark metrics
+
+Evaluation JSONL rows require gold_label and predicted_label. Allowed gold labels: supported, contradicted, mixed, insufficient_evidence. Predicted labels also allow human_review.
+
+~~~powershell
+artifactlens-research evaluate --dataset .\\datasets\\fixtures\\synthetic_claim_eval.jsonl --out .\\runs\\synthetic-metrics.json
+~~~
+
+The fixture is synthetic and only smoke-tests metric arithmetic. It is not historical ground truth and must not be presented as experimental evidence.
+
+Metrics include exact label accuracy, unsupported-claim escape rate, supported-claim acceptance rate, and human-review rate. Interpret them only against independently reviewed gold labels.
+
+## Tests
+
+~~~powershell
+python -m unittest discover -s tests -v
+~~~
+
+The repository root verifier has its own tests; run those separately from the repository root:
+
+~~~powershell
+python -m unittest test_verifier.py -v
+~~~
+
+## Research boundaries
+
+- OCR and transcript text are observations, not verified claims.
+- A syntactically valid citation does not establish that it supports a claim.
+- No claim is automatically marked supported by the current evidence gate.
+- No external source retrieval, semantic entailment model, or calibrated confidence model is implemented yet.
+- This branch has not been locally executed in the user's Windows environment. Run the commands and record actual results before claiming a successful smoke test.
+- Keep video, transcript, and extracted frames local unless reuse and redistribution are permitted. Do not commit raw media or private material.
 
 ## PINCH integration boundary
 
-The module is deliberately isolated under `artifactlens/`. Existing `verifier.py`, `test_verifier.py`, and `workflow-studio/` remain unchanged. Future integration should use a versioned event/claim contract and preserve the PINCH invariants in root `AGENTS.md`.
+The module stays isolated under artifactlens/; the root verifier.py, test_verifier.py, and workflow-studio/ remain unchanged. Future integration must preserve the repository invariants: generated is not verified, verified is not authorized, and unavailable is never PASS.
