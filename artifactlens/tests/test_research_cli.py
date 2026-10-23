@@ -13,10 +13,36 @@ class ResearchCliTests(unittest.TestCase):
             source = root / "clip.srt"
             output = root / "events.jsonl"
             source.write_text("1\n00:00:01,000 --> 00:00:02,000\nA spoken line.\n", encoding="utf-8")
-            self.assertEqual(0, main(["parse-transcript", str(source), "--out", str(output)]))
+            media_hash = "b" * 64
+            self.assertEqual(0, main([
+                "parse-transcript", str(source), "--out", str(output), "--media-sha256", media_hash
+            ]))
             event = json.loads(output.read_text(encoding="utf-8").splitlines()[0])
             self.assertEqual("transcript_observation", event["event_type"])
             self.assertEqual(1.0, event["timestamp_start"])
+            self.assertEqual(media_hash, event["media_sha256"])
+
+    def test_combine_events_rejects_duplicate_ids(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            first, second, output = root / "a.jsonl", root / "b.jsonl", root / "all.jsonl"
+            first.write_text('{"event_id":"evt_1"}\n', encoding="utf-8")
+            second.write_text('{"event_id":"evt_1"}\n', encoding="utf-8")
+            self.assertEqual(2, main([
+                "combine-events", "--inputs", str(first), str(second), "--out", str(output)
+            ]))
+            self.assertFalse(output.exists())
+
+    def test_combine_events_merges_distinct_ids(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            first, second, output = root / "a.jsonl", root / "b.jsonl", root / "all.jsonl"
+            first.write_text('{"event_id":"evt_1"}\n', encoding="utf-8")
+            second.write_text('{"event_id":"trn_1"}\n', encoding="utf-8")
+            self.assertEqual(0, main([
+                "combine-events", "--inputs", str(first), str(second), "--out", str(output)
+            ]))
+            self.assertEqual(2, len(output.read_text(encoding="utf-8").splitlines()))
 
     def test_review_gate_command_writes_decision(self):
         with tempfile.TemporaryDirectory() as directory:
