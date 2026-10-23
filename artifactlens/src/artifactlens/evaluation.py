@@ -22,9 +22,9 @@ def evaluate_claims(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
         if not isinstance(row, dict):
             raise EvaluationError(f"Row {index} must be an object")
         gold, predicted = row.get("gold_label"), row.get("predicted_label")
-        if gold not in GOLD_LABELS:
+        if not isinstance(gold, str) or gold not in GOLD_LABELS:
             raise EvaluationError(f"Row {index} has invalid gold_label: {gold!r}")
-        if predicted not in PREDICTED_LABELS:
+        if not isinstance(predicted, str) or predicted not in PREDICTED_LABELS:
             raise EvaluationError(f"Row {index} has invalid predicted_label: {predicted!r}")
         confusion[f"{gold} -> {predicted}"] += 1
         correct += int(gold == predicted)
