@@ -22,5 +22,9 @@ class EvaluationTests(unittest.TestCase):
         with self.assertRaises(EvaluationError):
             evaluate_claims([{"gold_label": "guess", "predicted_label": "supported"}])
 
+    def test_non_string_label_is_rejected_without_type_error(self):
+        with self.assertRaises(EvaluationError):
+            evaluate_claims([{"gold_label": ["supported"], "predicted_label": "supported"}])
+
 if __name__ == "__main__":
     unittest.main()
