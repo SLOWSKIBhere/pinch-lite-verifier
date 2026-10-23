@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "artifactlens-research"
-version = "0.1.0"
-description = "Local video OCR and provenance research prototype"
+version = "0.2.0"
+description = "Local video OCR, transcript provenance, and evidence-integrity research prototype"
 requires-python = ">=3.11"
 dependencies = [
   "opencv-python-headless>=4.9,<5",
@@ -17,6 +17,7 @@ dev = ["coverage>=7.4,<8"]
 
 [project.scripts]
 artifactlens = "artifactlens.cli:main"
+artifactlens-research = "artifactlens.research_cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
