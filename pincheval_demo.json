@@ -1,0 +1,262 @@
+[
+  {
+    "task_id": "S01",
+    "split": "seen",
+    "expected_answer": "4",
+    "candidate": {
+      "answer": "4",
+      "confidence": 0.92,
+      "evidence": [
+        "synthetic fixture evidence A",
+        "synthetic fixture evidence B"
+      ]
+    }
+  },
+  {
+    "task_id": "S02",
+    "split": "seen",
+    "expected_answer": "9",
+    "candidate": {
+      "answer": "9",
+      "confidence": 0.88,
+      "evidence": [
+        "synthetic fixture evidence A",
+        "synthetic fixture evidence B"
+      ]
+    }
+  },
+  {
+    "task_id": "S03",
+    "split": "seen",
+    "expected_answer": "12",
+    "candidate": {
+      "answer": "12",
+      "confidence": 0.91,
+      "evidence": [
+        "synthetic fixture evidence A",
+        "synthetic fixture evidence B"
+      ]
+    }
+  },
+  {
+    "task_id": "S04",
+    "split": "seen",
+    "expected_answer": "15",
+    "candidate": {
+      "answer": "15",
+      "confidence": 0.85,
+      "evidence": [
+        "synthetic fixture evidence A",
+        "synthetic fixture evidence B"
+      ]
+    }
+  },
+  {
+    "task_id": "S05",
+    "split": "seen",
+    "expected_answer": "21",
+    "candidate": {
+      "answer": "21",
+      "confidence": 0.9,
+      "evidence": [
+        "synthetic fixture evidence A",
+        "synthetic fixture evidence B"
+      ]
+    }
+  },
+  {
+    "task_id": "S06",
+    "split": "seen",
+    "expected_answer": "blue",
+    "candidate": {
+      "answer": "blue",
+      "confidence": 0.82,
+      "evidence": [
+        "synthetic fixture evidence A",
+        "synthetic fixture evidence B"
+      ]
+    }
+  },
+  {
+    "task_id": "S07",
+    "split": "seen",
+    "expected_answer": "true",
+    "candidate": {
+      "answer": "true",
+      "confidence": 0.95,
+      "evidence": [
+        "synthetic fixture evidence A",
+        "synthetic fixture evidence B"
+      ]
+    }
+  },
+  {
+    "task_id": "S08",
+    "split": "seen",
+    "expected_answer": "2",
+    "candidate": {
+      "answer": "2",
+      "confidence": 0.8,
+      "evidence": [
+        "synthetic fixture evidence A",
+        "synthetic fixture evidence B"
+      ]
+    }
+  },
+  {
+    "task_id": "S09",
+    "split": "seen",
+    "expected_answer": "north",
+    "candidate": {
+      "answer": "north",
+      "confidence": 0.86,
+      "evidence": [
+        "synthetic fixture evidence A",
+        "synthetic fixture evidence B"
+      ]
+    }
+  },
+  {
+    "task_id": "S10",
+    "split": "seen",
+    "expected_answer": "64",
+    "candidate": {
+      "answer": "64",
+      "confidence": 0.93,
+      "evidence": [
+        "synthetic fixture evidence A",
+        "synthetic fixture evidence B"
+      ]
+    }
+  },
+  {
+    "task_id": "H01",
+    "split": "heldout",
+    "expected_answer": "18",
+    "candidate": {
+      "answer": "18",
+      "confidence": 0.84,
+      "evidence": [
+        "synthetic fixture evidence A",
+        "synthetic fixture evidence B"
+      ]
+    }
+  },
+  {
+    "task_id": "H02",
+    "split": "heldout",
+    "expected_answer": "27",
+    "candidate": {
+      "answer": "72",
+      "confidence": 0.91,
+      "evidence": [
+        "synthetic fixture evidence A",
+        "synthetic fixture evidence B"
+      ]
+    }
+  },
+  {
+    "task_id": "H03",
+    "split": "heldout",
+    "expected_answer": "false",
+    "candidate": {
+      "answer": "false",
+      "confidence": 0.76,
+      "evidence": [
+        "synthetic fixture evidence A",
+        "synthetic fixture evidence B"
+      ]
+    }
+  },
+  {
+    "task_id": "H04",
+    "split": "heldout",
+    "expected_answer": "east",
+    "candidate": {
+      "answer": "west",
+      "confidence": 0.89,
+      "evidence": [
+        "synthetic fixture evidence A",
+        "synthetic fixture evidence B"
+      ]
+    }
+  },
+  {
+    "task_id": "H05",
+    "split": "heldout",
+    "expected_answer": "100",
+    "candidate": {
+      "answer": "100",
+      "confidence": 0.81,
+      "evidence": [
+        "synthetic fixture evidence A",
+        "synthetic fixture evidence B"
+      ]
+    }
+  },
+  {
+    "task_id": "H06",
+    "split": "heldout",
+    "expected_answer": "triangle",
+    "candidate": {
+      "answer": "triangle",
+      "confidence": 0.78,
+      "evidence": [
+        "synthetic fixture evidence A",
+        "synthetic fixture evidence B"
+      ]
+    }
+  },
+  {
+    "task_id": "H07",
+    "split": "heldout",
+    "expected_answer": "13",
+    "candidate": {
+      "answer": "31",
+      "confidence": 0.94,
+      "evidence": [
+        "synthetic fixture evidence A",
+        "synthetic fixture evidence B"
+      ]
+    }
+  },
+  {
+    "task_id": "H08",
+    "split": "heldout",
+    "expected_answer": "green",
+    "candidate": {
+      "answer": "green",
+      "confidence": 0.83,
+      "evidence": [
+        "synthetic fixture evidence A",
+        "synthetic fixture evidence B"
+      ]
+    }
+  },
+  {
+    "task_id": "H09",
+    "split": "heldout",
+    "expected_answer": "5",
+    "candidate": {
+      "answer": "5",
+      "confidence": 0.88,
+      "evidence": [
+        "synthetic fixture evidence A",
+        "synthetic fixture evidence B"
+      ]
+    }
+  },
+  {
+    "task_id": "H10",
+    "split": "heldout",
+    "expected_answer": "144",
+    "candidate": {
+      "answer": "144",
+      "confidence": 0.9,
+      "evidence": [
+        "synthetic fixture evidence A",
+        "synthetic fixture evidence B"
+      ]
+    }
+  }
+]
